@@ -1,3 +1,18 @@
 [submodule "scmRTOS"]
 	path = scmRTOS
 	url = https://github.com/scmrtos/scmrtos.git
+[submodule "samples/cortex/zynq7k/lib/ps7mmr"]
+	path = samples/cortex/zynq7k/lib/ps7mmr
+	url = https://github.com/z7bm/ps7mmr.git
+[submodule "samples/cortex/zynq7k/lib/z7lib"]
+	path = samples/cortex/zynq7k/lib/z7lib
+	url = https://github.com/z7bm/z7lib.git
+[submodule "samples/cortex/zynq7k/lib/io"]
+	path = samples/cortex/zynq7k/lib/io
+	url = https://github.com/emb-lib/io.git
+[submodule "samples/cortex/zynq7k/lib/xil"]
+	path = samples/cortex/zynq7k/lib/xil
+	url = https://github.com/z7bm/xil.git
+[submodule "samples/cortex/zynq7k/2-message/site_scons"]
+	path = samples/cortex/zynq7k/2-message/site_scons
+	url = https://github.com/fpga-lib/site_scons.git
