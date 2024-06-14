@@ -1,0 +1,6 @@
+
+parameters:
+    OSC_FREQ        : 100      # MHz               
+    DIFF_REFCLK     : false
+
+
