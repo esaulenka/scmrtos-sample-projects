@@ -16,8 +16,6 @@
 const uint32_t PIN_INT = 50;
 
 void swi_isr_handler();
-void ptmr_isr_handler();
-void gpio_isr_handler();
 void default_isr_handler();
 
 Uart uart1(UART1_ADDR);
@@ -91,18 +89,9 @@ int main()
         ps7_register_isr_handler(&default_isr_handler, i);
     }
 
-    ps7_register_isr_handler(&swi_isr_handler,   PS7IRQ_ID_SW15);
-    //ps7_register_isr_handler(&ptmr_isr_handler,  PS7IRQ_ID_PTMR);
+    ps7_register_isr_handler(&swi_isr_handler,       PS7IRQ_ID_SW15);
     ps7_register_isr_handler(&OS::system_timer_isr,  PS7IRQ_ID_PTMR);
-    ps7_register_isr_handler(&gpio_isr_handler,  PS7IRQ_ID_GPIO);
 
-    //------------------------------------------------------
-    //
-    //    Setup GPIO interrupt
-    //
-//  gpio_clr_int_sts(PIN_INT);
-//  gpio_int_pol(PIN_INT, GPIO_INT_POL_HIGH_RISE);
-//  gpio_int_en(PIN_INT);
 
     gic_int_enable(PS7IRQ_ID_UART1);
     gic_set_target(PS7IRQ_ID_UART1, GIC_CPU0);
@@ -138,20 +127,6 @@ int main()
 
     print("cam: program start!\n");
 
-//  uint32_t n = 100;
-//
-//  for(;;)
-//  {
-//      if(--n == 0)
-//      {
-//          n = 10000;
-//          wrpa( GIC_ICDSGIR,                                   // 0b10: send the interrupt on only to the CPU
-//                (2 << GIC_ICDSGIR_TARGET_LIST_FILTER_BPOS) +   // interface that requested the interrupt
-//                 PS7IRQ_ID_SW15                                // rise software interrupt ID15
-//                );
-//      }
-//  }
-
     OS::run();
 
 }
@@ -169,16 +144,12 @@ namespace OS
             if (Mamont.src == TMamont::PROC_SRC)
             {
                 gpio::pin_off(10); // JE2 off
-                //PB0.Off();                  // show that message received from other process
             }
             else
             {
                 gpio::pin_off(10); // JE2 off
                 gpio::pin_on(10);  // JE2 on
                 gpio::pin_off(10); // JE2 off
-//              PB0.Off();                  // show that message received from isr
-//              PB0.On();
-//              PB0.Off();
             }
         }
     }
@@ -203,7 +174,6 @@ namespace OS
             m.data = 5;
             MamontMsg = m;                  // put the content to the OS::message object
             gpio::pin_on(10); // JE2 on
-            //PB0.On();
             MamontMsg.send();               // send the message
         }
     }
@@ -216,7 +186,6 @@ void OS::system_timer_user_hook()
     m.data = 10;
     MamontMsg = m;                          // put the content to the OS::message object
     gpio::pin_on(10); // JE2 on
-    //PB0.On();
     MamontMsg.send_isr();                   // send the message
 }
 
@@ -228,29 +197,6 @@ void OS::idle_process_user_hook()
 #endif
 
 
-//------------------------------------------------------------------------------
-void ptmr_isr_handler()
-{
-//  volatile auto slon = 0;
-//
-//  gpio::pin_on(10);  // JE2 on
-//  for(size_t i = 0; i < 1000; ++i)
-//  {
-//      ++slon;
-//  }
-//  gpio::pin_off(10); // JE2 off
-    
-}
-//------------------------------------------------------------------------------
-void gpio_isr_handler()
-{
-    //write_pa(GPIO_INT_STAT_1_REG, 1ul << 18);
-    gpio_clr_int_sts(PIN_INT);
-
-    wrpa(GPIO_MASK_DATA_0_LSW_REG, (~(1ul << 7) << 16) | (1ul << 7) );
-    wrpa(GPIO_MASK_DATA_0_LSW_REG, (~(1ul << 7) << 16) | 0 );
-
-}
 //------------------------------------------------------------------------------
 void swi_isr_handler()
 {
