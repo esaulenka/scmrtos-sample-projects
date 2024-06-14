@@ -8,7 +8,7 @@
 	path = samples/cortex/zynq7k/lib/z7lib
 	url = https://github.com/z7bm/z7lib.git
 [submodule "samples/cortex/zynq7k/lib/io"]
-	path = samples/cortex/zynq7k/lib/io
+	path = samples/cortex/zynq7k/lib/embio
 	url = https://github.com/emb-lib/io.git
 [submodule "samples/cortex/zynq7k/lib/xil"]
 	path = samples/cortex/zynq7k/lib/xil
