@@ -86,11 +86,11 @@ int main()
     //
     for(uint32_t i = 0; i < PS7_MAX_IRQ_ID; ++i)
     {
-        ps7_register_isr_handler(&default_isr_handler, i);
+        ps7_register_isr(&default_isr_handler, i);
     }
 
-    ps7_register_isr_handler(&swi_isr_handler,       PS7IRQ_ID_SW15);
-    ps7_register_isr_handler(&OS::system_timer_isr,  PS7IRQ_ID_PTMR);
+    ps7_register_isr(&swi_isr_handler,       PS7IRQ_ID_SW15);
+    ps7_register_isr(&OS::system_timer_isr,  PS7IRQ_ID_PTMR);
 
 
     gic_int_enable(PS7IRQ_ID_UART1);

@@ -4,7 +4,7 @@
 #include <array>
 #include "z7int.h"
 
-extern TISRHandler PS7Handlers[PS7_MAX_IRQ_ID];
+extern isr_ptr_t ps7_handlers[PS7_MAX_IRQ_ID];
 
 //------------------------------------------------------------------------------
 class IntIdStack
@@ -52,7 +52,7 @@ void irq_handler()
     #if NESTED_INTERRUPTS_ENABLE == 1
         enable_nested_interrupts();
     #endif
-        (*PS7Handlers[INT_ID])();
+        (*ps7_handlers[INT_ID])();
     #if NESTED_INTERRUPTS_ENABLE == 1
         disable_nested_interrupts();
     #endif

@@ -111,11 +111,11 @@ int main()
     // initialize interrupt handlers table
     for(uint32_t i = 0; i < PS7_MAX_IRQ_ID; ++i)
     {
-        ps7_register_isr_handler(&default_isr_handler, i);
+        ps7_register_isr(&default_isr_handler, i);
     }
     
-    ps7_register_isr_handler(&swi_isr_handler,  PS7IRQ_ID_SW7);
-    ps7_register_isr_handler(&gpio_isr_handler, PS7IRQ_ID_GPIO);
+    ps7_register_isr(&swi_isr_handler,  PS7IRQ_ID_SW7);
+    ps7_register_isr(&gpio_isr_handler, PS7IRQ_ID_GPIO);
     
     //-----------------------------------------------
     // set up GPIO interrupt
