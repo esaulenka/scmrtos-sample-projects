@@ -1,0 +1,12 @@
+
+
+sources:
+
+    - src/sw/apu/common/exc.cpp
+    - src/sw/apu/bld/boot.S
+    - src/sw/apu/bld/asm_vectors.S
+    - src/sw/apu/bld/translation_table.S
+    - src/sw/apu/bld/startup.c
+    - src/sw/apu/bld/loader.cpp
+    - src/sw/apu/bld/main.cpp
+

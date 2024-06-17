@@ -1,0 +1,6 @@
+
+sources:
+    - src/hw/syn/lwircam.sv
+    - src/hw/syn/axi3.sv
+    - src/hw/syn/ps7_hw.sv
+
