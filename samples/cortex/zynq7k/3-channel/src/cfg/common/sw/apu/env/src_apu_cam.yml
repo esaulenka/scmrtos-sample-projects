@@ -1,0 +1,22 @@
+
+
+sources:
+
+    - src/sw/apu/common/exc.cpp
+    - src/sw/apu/cam/start.S
+    - src/sw/apu/cam/startup.c
+    - src/sw/apu/cam/main.cpp
+
+    - ../../../../scmRTOS/core/os_kernel.cpp
+    - ../../../../scmRTOS/core/os_services.cpp
+    - ../../../../scmRTOS/port/zynq7k/os_target.cpp
+    - ../../../../scmRTOS/port/zynq7k/os_target_asm.S
+    - ../../../../scmRTOS/port/zynq7k/exc_vectors.S
+
+
+
+
+
+
+
+

@@ -1,0 +1,19 @@
+
+import : clk
+
+type   : clk_wiz
+
+config:
+    PRIMITIVE                  : PLL
+    PRIM_IN_FREQ               : = clk.REF_CLK
+    CLKOUT1_REQUESTED_OUT_FREQ : = clk.MAIN_CLK
+
+    CLKOUT2_USED               : true
+    CLKOUT2_REQUESTED_OUT_FREQ : = clk.MAIN_CLK 
+    CLKOUT2_REQUESTED_PHASE    : = clk.CLK_OUT_PHASE_SHIFT
+
+    USE_LOCKED                 : true
+    USE_RESET                  : false
+    PRIM_SOURCE                : No_buffer
+    USE_SAFE_CLOCK_STARTUP     : true
+

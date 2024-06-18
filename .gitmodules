@@ -19,3 +19,6 @@
 [submodule "samples/cortex/zynq7k/1-event-flag/site_scons"]
 	path = samples/cortex/zynq7k/1-event-flag/site_scons
 	url = https://github.com/fpga-lib/site_scons.git
+[submodule "samples/cortex/zynq7k/3-channel/site_scons"]
+	path = samples/cortex/zynq7k/3-channel/site_scons
+	url = https://github.com/fpga-lib/site_scons.git
