@@ -1,26 +1,52 @@
+//------------------------------------------------------------------------------
+//
+//    Bootloader Main Source
+//
+//    Permission is hereby granted, free of charge, to any person
+//    obtaining  a copy of this software and associated documentation
+//    files (the "Software"), to deal in the Software without restriction,
+//    including without limitation the rights to use, copy, modify, merge,
+//    publish, distribute, sublicense, and/or sell copies of the Software,
+//    and to permit persons to whom the Software is furnished to do so,
+//    subject to the following conditions:
+//
+//    The above copyright notice and this permission notice shall be included
+//    in all copies or substantial portions of the Software.
+//
+//    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+//    EXPRESS  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+//    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+//    IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+//    CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+//    TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH
+//    THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+//
+//    Copyright (c) 2017-2024, Zynq-7000 Bare-metal Project
+//    -----------------------------------------------------
+//    Project sources: https://github.com/z7bm
+//
+//------------------------------------------------------------------------------
 
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
 
 #include <ps7mmrs.h>
-#include "ps7_init.h"
-#include "z7int.h"
-#include "z7qspi.h"
-#include "z7uart.h"
+#include <ps7_init.h>
+#include <z7gpio.h>
+#include <z7int.h>
+#include <z7qspi.h>
+#include <z7uart.h>
         
-const uint32_t PIN_INT = 50;
+//---------------------------------------------------------------------------
+//
+//      Declarations
+//
+const uint32_t JE1 = 13;    // Zed Board
+const uint32_t JE2 = 10;    // Zed Board
 
-void swi_isr_handler();
-void gpio_isr_handler();
 void default_isr_handler();
-
 void cpy32(uint32_t *const dst, const uint32_t *src, const size_t count);
-
-const uint32_t BUF_SIZE = 4*1024/4;
-
-uint32_t Buf[BUF_SIZE];
-uint32_t TargetBuf[BUF_SIZE];
 
 const uint32_t QSPI_BUF_SIZE = 1024;
 
@@ -31,8 +57,7 @@ extern uint32_t QSpiBuf_ddr[QSPI_BUF_SIZE];
 
 TQSpi QSpi_ddr(QSpiBuf_ddr);
 
-Uart uart1(UART1_ADDR);
-
+Uart  uart1(UART1_ADDR);
 
 //------------------------------------------------------------------------------
 
@@ -86,25 +111,16 @@ int main()
     remap_mmu_tt(MMU_TT_INIT_ADDR, MMU_TT_ADDR);
 
     //-----------------------------------------------
-    // set up output pins
-    sbpa(GPIO_DIRM_0_REG, 1ul << 7);
-    sbpa(GPIO_OEN_0_REG,  1ul << 7);
-    sbpa(GPIO_DATA_0_REG, 1ul << 7);
+    //
+    //    set up output pins
+    //
+    sbpa(GPIO_DIRM_0_REG, 1ul << JE1);
+    sbpa(GPIO_OEN_0_REG,  1ul << JE1);
+    sbpa(GPIO_DATA_0_REG, 1ul << JE1);
     
-    sbpa(GPIO_DIRM_0_REG, 1ul << 16);
-    sbpa(GPIO_OEN_0_REG,  1ul << 16);
-    sbpa(GPIO_DATA_0_REG, 1ul << 16);
-    
-    //  JE1
-    sbpa(GPIO_DIRM_0_REG, 1ul << 13);
-    sbpa(GPIO_OEN_0_REG,  1ul << 13);
-    //set_bits_pa(GPIO_DATA_0_REG, 1ul << 13);
-    wrpa(GPIO_MASK_DATA_0_LSW_REG, (~(1ul << 13) << 16) | 0 );
-    
-    //  JE2
-    sbpa(GPIO_DIRM_0_REG, 1ul << 10);
-    sbpa(GPIO_OEN_0_REG,  1ul << 10);
-    sbpa(GPIO_DATA_0_REG, 1ul << 10);
+    sbpa(GPIO_DIRM_0_REG, 1ul << JE2);
+    sbpa(GPIO_OEN_0_REG,  1ul << JE2);
+    sbpa(GPIO_DATA_0_REG, 1ul << JE2);
 
         
     //-----------------------------------------------
@@ -114,29 +130,12 @@ int main()
         ps7_register_isr(&default_isr_handler, i);
     }
     
-    ps7_register_isr(&swi_isr_handler,  PS7IRQ_ID_SW7);
-    ps7_register_isr(&gpio_isr_handler, PS7IRQ_ID_GPIO);
-    
-    //-----------------------------------------------
-    // set up GPIO interrupt
-    gpio_clr_int_sts(PIN_INT);
-    gpio_int_pol(PIN_INT, GPIO_INT_POL_HIGH_RISE);
-    gpio_int_en(PIN_INT);
-        
-    
     gic_int_enable(PS7IRQ_ID_UART1);
     gic_set_target(PS7IRQ_ID_UART1, GIC_CPU0);
 
-    gic_set_target(PS7IRQ_ID_GPIO, 1ul << GIC_CPU0);
-    gic_set_config(PS7IRQ_ID_GPIO, GIC_EDGE_SINGLE);
-    gic_int_enable(PS7IRQ_ID_GPIO);
-
     sbpa(GIC_ICCPMR, 0xff);
-    //gic_set_priority(PS7IRQ_ID_SW7, 0x10);
-
-
-    sbpa(GIC_ICDDCR, 0x1);
-    sbpa(GIC_ICCICR, 0x1);
+    sbpa(GIC_ICDDCR, 0x1);   // enable GIC Distributor
+    sbpa(GIC_ICCICR, 0x1);   // enable interruptes for CPU interfaces
 
     enable_interrupts();
     
@@ -157,16 +156,16 @@ int main()
     //
     //    Relocate OCM to upper memory
     //
-
     slcr_unlock();
     __dsb();
     __isb();
 
-    sbpa(OCM_CFG_REG, 0x07);  // OCM0, OCM1 and OCM2 segments relocate
+    sbpa(OCM_CFG_REG, 0x07);                                                  // OCM0, OCM1 and OCM2 segments relocate
     slcr_lock();
-    wrpa(SCU_CTRL_REG, 0);    // disable SCU address filtering
+
+    wrpa(SCU_CTRL_REG, 0);                                                    // disable SCU address filtering
     wrpa(FILTERING_START_ADDR_REG, 0);
-    wrpa(SCU_CTRL_REG, SCU_ADDRESS_FILTERING_ENABLE_MASK | SCU_ENABLE_MASK);   // enable SCU address filtering
+    wrpa(SCU_CTRL_REG, SCU_ADDRESS_FILTERING_ENABLE_MASK | SCU_ENABLE_MASK);  // enable SCU address filtering
     __dmb();
     __isb();
 
@@ -177,48 +176,10 @@ int main()
 
     for(;;)
     {
-        
-        wrpa(GPIO_MASK_DATA_0_LSW_REG, (~(1ul << 13) << 16) | (1ul << 13) );  // JE1 on
-        wrpa(GPIO_MASK_DATA_0_LSW_REG, (~(1ul << 13) << 16) | 0 );            // JE1 off
+        gpio::pin_on(JE1);
+        gpio::pin_off(JE1);
        // QSpi.run();
-        
-        
-//      write_pa( GIC_ICDSGIR,                                  // 0b10: send the interrupt on only to the CPU
-//               (2 << GIC_ICDSGIR_TARGET_LIST_FILTER_BPOS) +   // interface that requested the interrupt
-//                PS7IRQ_ID_SW7                                 // rise software interrupt ID15
-//              );
-
-        
-        
-        
-//      write_pa( GIC_ICDSGIR,                                  // 0b10: send the interrupt on only to the CPU
-//               (0 << GIC_ICDSGIR_TARGET_LIST_FILTER_BPOS) +   // interface that requested the interrupt
-//               (0x01 << GIC_ICDSGIR_CPU_TARGET_LIST_BPOS) +   //
-//                PS7IRQ_ID_SW7                                 // rise software interrupt ID15
-//              );
     }
-}
-//------------------------------------------------------------------------------
-void gpio_isr_handler()
-{
-    //write_pa(GPIO_INT_STAT_1_REG, 1ul << 18);
-    gpio_clr_int_sts(PIN_INT);
-
-    wrpa(GPIO_MASK_DATA_0_LSW_REG, (~(1ul << 7) << 16) | (1ul << 7) );
-    wrpa(GPIO_MASK_DATA_0_LSW_REG, (~(1ul << 7) << 16) | 0 );
-
-    //write_pa(GPIO_MASK_DATA_0_LSW_REG, (~(1ul << 13) << 16) | (1ul << 13) );  // JE1 on
-    //write_pa(GPIO_MASK_DATA_0_LSW_REG, (~(1ul << 13) << 16) | 0 );            // JE1 off
-}
-//------------------------------------------------------------------------------
-void swi_isr_handler()
-{
-    wrpa(GPIO_MASK_DATA_0_MSW_REG, (~(1ul << 0) << 16) | (1ul << 0) );
-    wrpa(GPIO_MASK_DATA_0_MSW_REG, (~(1ul << 0) << 16) | 0 );
-    
-    wrpa(GPIO_MASK_DATA_0_LSW_REG, (~(1ul << 10) << 16) | (1ul << 10) );  // JE2 on
-    wrpa(GPIO_MASK_DATA_0_LSW_REG, (~(1ul << 10) << 16) | 0 );            // JE2 off
-
 }
 //------------------------------------------------------------------------------
 void default_isr_handler()
