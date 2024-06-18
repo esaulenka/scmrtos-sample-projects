@@ -82,13 +82,42 @@
         </Menu>
     </Config>
     <CustomFolders></CustomFolders>
+    <List Name="RTE">
+    </List>
     <Files AutoFolders="DirectoryView">
+        <Folder Name="../lib">
+            <Folder Name="z7lib">
+                <F
+                    N="../lib/z7lib/*"
+                    Recurse="1"
+                    Excludes=".git"
+                    L="1"/>
+            </Folder>
+            <F
+                N="../lib/*"
+                Recurse="1"
+                Excludes=".git"/>
+        </Folder>
+        <Folder Name="../../../../scmRTOS">
+            <Folder Name="core">
+                <F
+                    N="../../../../scmRTOS/core/*"
+                    Recurse="1"
+                    Excludes=".git"/>
+            </Folder>
+            <Folder Name="port">
+                <Folder Name="zynq7k">
+                    <F
+                        N="../../../../scmRTOS/port/zynq7k/*"
+                        Recurse="1"
+                        Excludes=".git"/>
+                </Folder>
+            </Folder>
+        </Folder>
         <F
             N="*"
             Recurse="1"
             Excludes=""
             L="1"/>
     </Files>
-    <List Name="RTE">
-    </List>
 </Project>

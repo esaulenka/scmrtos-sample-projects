@@ -212,6 +212,23 @@
                 Excludes=".git"
                 L="1"/>
         </Folder>
+        <Folder Name="../../../../scmRTOS">
+            <Folder Name="core">
+                <F N="../../../../scmRTOS/core/os_kernel.cpp"/>
+                <F N="../../../../scmRTOS/core/os_kernel.h"/>
+                <F N="../../../../scmRTOS/core/os_services.cpp"/>
+                <F N="../../../../scmRTOS/core/os_services.h"/>
+                <F N="../../../../scmRTOS/core/scmRTOS.h"/>
+                <F N="../../../../scmRTOS/core/scmRTOS_defs.h"/>
+                <F N="../../../../scmRTOS/core/usrlib.h"/>
+            </Folder>
+            <Folder Name="port">
+                <Folder Name="zynq7k">
+                    <F N="../../../../scmRTOS/port/zynq7k/os_target.cpp"/>
+                    <F N="../../../../scmRTOS/port/zynq7k/os_target.h"/>
+                </Folder>
+            </Folder>
+        </Folder>
         <F
             N="*"
             Recurse="1"

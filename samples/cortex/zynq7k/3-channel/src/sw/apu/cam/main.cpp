@@ -4,11 +4,11 @@
 #include <string.h>
 
 #include <ps7mmrs.h>
-#include "z7int.h"
-#include "z7ptmr.h"
-#include "z7gpio.h"
-#include "z7qspi.h"
-#include "z7uart.h"
+#include <z7int.h>
+#include <z7ptmr.h>
+#include <z7gpio.h>
+#include <z7qspi.h>
+#include <z7uart.h>
 
 #include <scmRTOS.h>
                
@@ -116,15 +116,10 @@ int main()
         ps7_register_isr(&default_isr, i);
     }
 
-    ps7_register_isr(&ttc0_0_isr,           PS7IRQ_ID_TTC0_0);
-    ps7_register_isr(&OS::system_timer_isr, PS7IRQ_ID_PTMR);
+    ps7_register_isr(&ttc0_0_isr, PS7IRQ_ID_TTC0_0);
 
     gic_int_enable(PS7IRQ_ID_UART1);
     gic_set_target(PS7IRQ_ID_UART1, GIC_CPU0);
-
-//  gic_set_target(PS7IRQ_ID_GPIO, 1ul << GIC_CPU0);
-//  gic_set_config(PS7IRQ_ID_GPIO, GIC_EDGE_SINGLE);
-//  gic_int_enable(PS7IRQ_ID_GPIO);
 
     gic_set_priority(PS7IRQ_ID_TTC0_0, 10);
     gic_set_target(PS7IRQ_ID_TTC0_0, GIC_CPU0);
@@ -137,10 +132,7 @@ int main()
     //
     //    CPU 0 Private Timer
     //
-    gic_set_priority(PS7IRQ_ID_PTMR, 20);
-    gic_int_enable(PS7IRQ_ID_PTMR);
-    PrivateTimer::set_reload_value(200, 1000); // MHz, us
-    PrivateTimer::start();
+    OS::start_system_timer(200, 1000, 20);
 
     //------------------------------------------------------
     //
@@ -165,7 +157,7 @@ int main()
     
     enable_interrupts();
 
-    print("scmRTOS start!\n");
+    print("scmRTOS: 3-channel sample start!\n");
 
     OS::run();
 

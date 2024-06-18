@@ -4,12 +4,11 @@
 #include <string.h>
 
 #include <ps7mmrs.h>
-#include "z7int.h"
-#include "z7ptmr.h"
-#include "z7gpio.h"
-#include "z7qspi.h"
-#include "z7uart.h"
-
+#include <z7int.h>
+#include <z7ptmr.h>
+#include <z7gpio.h>
+#include <z7qspi.h>
+#include <z7uart.h>
 
 #include <scmRTOS.h>
                
@@ -64,13 +63,10 @@ int print(const char *format, ...)
     va_end(args);                                      //
                                                        //
     uart1.send(print_buf);
-    //TxBuf.write(print_buf, size);                      // put formatted data to port buffer
                                                        //
     return size;
 }
 //------------------------------------------------------------------------------
-
-
 
 //------------------------------------------------------------------------------
 int main() 
@@ -89,16 +85,10 @@ int main()
         ps7_register_isr(&default_isr_handler, i);
     }
 
-    ps7_register_isr(&swi_isr_handler,       PS7IRQ_ID_SW15);
-    ps7_register_isr(&OS::system_timer_isr,  PS7IRQ_ID_PTMR);
-
+    ps7_register_isr(&swi_isr_handler, PS7IRQ_ID_SW15);
 
     gic_int_enable(PS7IRQ_ID_UART1);
     gic_set_target(PS7IRQ_ID_UART1, GIC_CPU0);
-
-    gic_set_target(PS7IRQ_ID_GPIO, 1ul << GIC_CPU0);
-    gic_set_config(PS7IRQ_ID_GPIO, GIC_EDGE_SINGLE);
-    gic_int_enable(PS7IRQ_ID_GPIO);
 
     sbpa(GIC_ICCPMR, 0xff);
     gic_set_priority(PS7IRQ_ID_SW15, 30);    // lowest priority
@@ -108,10 +98,7 @@ int main()
     //
     //    CPU 0 Private Timer
     //
-    gic_set_priority(PS7IRQ_ID_PTMR, 5);
-    gic_int_enable(PS7IRQ_ID_PTMR);
-    PrivateTimer::set_reload_value(200, 1000); // MHz, us
-    PrivateTimer::start();
+    OS::start_system_timer(200, 1000, 20);
 
     //------------------------------------------------------
     //
@@ -125,7 +112,7 @@ int main()
 
     enable_interrupts();
 
-    print("cam: program start!\n");
+    print("scmRTOS: 2-message sample start!\n");
 
     OS::run();
 
