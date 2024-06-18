@@ -24,6 +24,6 @@ proc rl { } {
 
     dow build/zed/sw/apu/cam/cam.elf
 
-  #  con
+    con
 }
 
