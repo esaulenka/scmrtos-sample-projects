@@ -1,0 +1,68 @@
+#-------------------------------------------------------------------------------
+#
+#    Variant construction script
+#
+#    Author: Harry E. Zhurov
+#
+#-------------------------------------------------------------------------------
+
+import os
+import sys
+
+from pathlib import Path
+
+sys.path.append(os.path.join(os.pardir, 'common'))
+
+from build_main import *
+
+#-------------------------------------------------------------------------------
+#
+#    Environment
+#
+Import('envx')
+
+envx['ARGUMENTS']            = ARGUMENTS
+envx['COMMAND_LINE_TARGETS'] = COMMAND_LINE_TARGETS
+
+
+class BuildZed(BuildMain):
+
+    def __init__(self, **src_dict):
+        super().__init__(**src_dict)
+
+        self.add_apu_target()
+
+    def add_apu_target(self):
+
+        envx = self.envx
+        VivadoProject = self.VivadoProject
+        self.apu = SConscript(Path(self.dirs.COMMON) / 'sw' / 'apu' / 'apu.scons', exports = ['envx', 'VivadoProject'])
+
+        xsct = Path(envx['XILINX_VITIS']) / 'bin' / 'xsct'
+
+        def load(target, source, env):
+            cmd = str(xsct) + ' ' + self.dirs.SCRIPT_COMMON + os.sep + 'load.tcl'
+            cexec(cmd)
+
+        apu_load = envx.Action(load, colorize('load apu', 'yellow', True))
+        self.apuld = envx.Command('apuld', self.apu, apu_load)
+
+        self.envx.Alias('apu',   self.apu)
+        self.envx.Alias('apuld', self.apuld)
+
+        Help("""
+            Software Targets
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                apu   : build APU programs
+                apuld : load APU
+            """)
+
+
+
+bv = BuildZed(env     = envx,
+              src_syn = 'src_syn.yml',
+              src_sim = 'src_sim.yml',
+              bd      = 'bd.yml')
+
+#-------------------------------------------------------------------------------
+

@@ -1,0 +1,8 @@
+
+
+sources:
+
+    - ../lib/z7lib/z7int.cpp
+    - ../lib/z7lib/z7qspi.cpp
+    - ../lib/z7lib/z7uart.cpp
+

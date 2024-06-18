@@ -1,0 +1,238 @@
+<!DOCTYPE Project SYSTEM "http://www.slickedit.com/dtd/vse/10.0/vpj.dtd">
+<Project
+    Version="10.0"
+    VendorName="SlickEdit"
+    WorkingDir=".">
+    <Config
+        Name="zed"
+        OutputFile=""
+        CompilerConfigName="Latest Version">
+        <Menu>
+            <Target
+                Name="Compile"
+                CaptureOutputWith="ProcessBuffer"
+                SaveOption="SaveAll"
+                ClearProcessBuffer="1"
+                RunFromDir="%rw"
+                MenuCaption="Compile Simulator Project">
+                <Exec CmdLine="etime.sh scons -s variant=%bn wlib"/>
+            </Target>
+            <Target
+                Name="Build"
+                CaptureOutputWith="ProcessBuffer"
+                SaveOption="SaveAll"
+                ClearProcessBuffer="1"
+                MenuCaption="&amp;Build Vivado Project"
+                Verbose="1"
+                RunFromDir="%rw">
+                <Exec CmdLine="etime.sh scons bv=%bn apu"/>
+            </Target>
+            <Target
+                Name="Rebuild"
+                CaptureOutputWith="ProcessBuffer"
+                SaveOption="SaveAll"
+                ClearProcessBuffer="1"
+                Verbose="1"
+                RunFromDir="%rw">
+                <Exec CmdLine="scons bv=%bn -c &amp;&amp; etime.sh scons -s bv=%bn prjsyn"/>
+            </Target>
+            <Target
+                Name="Debug"
+                MenuCaption="&amp;Debug"
+                SaveOption="SaveNone"
+                RunInXterm="1"
+                RunFromDir="%rw">
+                <Exec CmdLine="scons -s variant=%bn qs_gui"/>
+            </Target>
+            <Target
+                Name="Sim Run"
+                MenuCaption="Sim &amp;Run"
+                RunFromDir="%rw"
+                CaptureOutputWith="ProcessBuffer"
+                SaveOption="SaveAll"
+                ClearProcessBuffer="1">
+                <Exec CmdLine="etime.sh scons -s variant=%bn qs_run"/>
+            </Target>
+            <Target
+                Name="Create Vivado Project"
+                MenuCaption="Create &amp;Vivado Project"
+                RunFromDir="%rw"
+                CaptureOutputWith="ProcessBuffer"
+                SaveOption="SaveAll"
+                ClearProcessBuffer="1">
+                <Exec CmdLine="etime.sh scons -s variant=%bn prj"/>
+            </Target>
+            <Target
+                Name="Open Vivado Project"
+                MenuCaption="&amp;Open Vivado Project"
+                RunFromDir="%rw"
+                CaptureOutputWith="ProcessBuffer"
+                SaveOption="SaveAll"
+                ClearProcessBuffer="1">
+                <Exec CmdLine="etime.sh scons -s variant=%bn prjopen"/>
+            </Target>
+            <Target
+                Name="Load APU"
+                MenuCaption="Load AP&amp;U"
+                RunFromDir="%rw"
+                CaptureOutputWith="ProcessBuffer"
+                SaveOption="SaveAll">
+                <Exec CmdLine="etime.sh scons bv=%bn apuld"/>
+            </Target>
+        </Menu>
+    </Config>
+    <CustomFolders></CustomFolders>
+    <List Name="RTE">
+    </List>
+    <Files AutoFolders="DirectoryView">
+        <Folder Name="../lib">
+            <F
+                N="../lib/*.C"
+                Recurse="1"
+                Excludes=".git"
+                L="1"/>
+            <F
+                N="../lib/*.c"
+                Recurse="1"
+                Excludes=".git"
+                L="1"/>
+            <F
+                N="../lib/*.C++"
+                Recurse="1"
+                Excludes=".git"
+                L="1"/>
+            <F
+                N="../lib/*.c++"
+                Recurse="1"
+                Excludes=".git"
+                L="1"/>
+            <F
+                N="../lib/*.CC"
+                Recurse="1"
+                Excludes=".git"
+                L="1"/>
+            <F
+                N="../lib/*.cc"
+                Recurse="1"
+                Excludes=".git"
+                L="1"/>
+            <F
+                N="../lib/*.cp"
+                Recurse="1"
+                Excludes=".git"
+                L="1"/>
+            <F
+                N="../lib/*.cpp"
+                Recurse="1"
+                Excludes=".git"
+                L="1"/>
+            <F
+                N="../lib/*.cppm"
+                Recurse="1"
+                Excludes=".git"
+                L="1"/>
+            <F
+                N="../lib/*.cxx"
+                Recurse="1"
+                Excludes=".git"
+                L="1"/>
+            <F
+                N="../lib/*.H"
+                Recurse="1"
+                Excludes=".git"
+                L="1"/>
+            <F
+                N="../lib/*.h"
+                Recurse="1"
+                Excludes=".git"
+                L="1"/>
+            <F
+                N="../lib/*.h++"
+                Recurse="1"
+                Excludes=".git"
+                L="1"/>
+            <F
+                N="../lib/*.hh"
+                Recurse="1"
+                Excludes=".git"
+                L="1"/>
+            <F
+                N="../lib/*.hp"
+                Recurse="1"
+                Excludes=".git"
+                L="1"/>
+            <F
+                N="../lib/*.hpp"
+                Recurse="1"
+                Excludes=".git"
+                L="1"/>
+            <F
+                N="../lib/*.hxx"
+                Recurse="1"
+                Excludes=".git"
+                L="1"/>
+            <F
+                N="../lib/*.i"
+                Recurse="1"
+                Excludes=".git"
+                L="1"/>
+            <F
+                N="../lib/*.inl"
+                Recurse="1"
+                Excludes=".git"
+                L="1"/>
+            <F
+                N="../lib/*.ixx"
+                Recurse="1"
+                Excludes=".git"
+                L="1"/>
+            <F
+                N="../lib/*.mpp"
+                Recurse="1"
+                Excludes=".git"
+                L="1"/>
+            <F
+                N="../lib/*.mxx"
+                Recurse="1"
+                Excludes=".git"
+                L="1"/>
+            <F
+                N="../lib/*.qth"
+                Recurse="1"
+                Excludes=".git"
+                L="1"/>
+            <F
+                N="../lib/*.tcc"
+                Recurse="1"
+                Excludes=".git"
+                L="1"/>
+            <F
+                N="../lib/*.xpm"
+                Recurse="1"
+                Excludes=".git"
+                L="1"/>
+        </Folder>
+        <Folder Name="../../../../scmRTOS">
+            <Folder Name="core">
+                <F N="../../../../scmRTOS/core/os_kernel.cpp"/>
+                <F N="../../../../scmRTOS/core/os_kernel.h"/>
+                <F N="../../../../scmRTOS/core/os_services.cpp"/>
+                <F N="../../../../scmRTOS/core/os_services.h"/>
+                <F N="../../../../scmRTOS/core/scmRTOS.h"/>
+                <F N="../../../../scmRTOS/core/scmRTOS_defs.h"/>
+                <F N="../../../../scmRTOS/core/usrlib.h"/>
+            </Folder>
+            <Folder Name="port">
+                <Folder Name="zynq7k">
+                    <F N="../../../../scmRTOS/port/zynq7k/os_target.cpp"/>
+                    <F N="../../../../scmRTOS/port/zynq7k/os_target.h"/>
+                </Folder>
+            </Folder>
+        </Folder>
+        <F
+            N="*"
+            Recurse="1"
+            Excludes=""
+            L="1"/>
+    </Files>
+</Project>

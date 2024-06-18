@@ -1,0 +1,276 @@
+#-------------------------------------------------------------------------------
+#
+#    Variant construction script for Zynq-7000 APU bare-metal mode
+#
+#    Author: Harry E. Zhurov
+#
+#-------------------------------------------------------------------------------
+
+import os
+
+from pathlib       import Path
+from datetime      import datetime
+from arm_none_eabi import setup_default_env
+
+#-------------------------------------------------------------------------------
+#
+#    Utility Functions
+#
+def make_objects(env, src, dst_dir, ext = 'o'):
+    obj_list = []
+
+    for s in src:
+        src_base = str( Path(s).parent )
+        o = s.replace(src_base, dst_dir)
+        o = drop_suffix(o) + '.' + ext
+        obj = env.Object(o, s)[0]
+        env.AddPostAction(obj, create_lst)
+        obj_list.append(obj)
+
+    return obj_list
+
+#---------------------------------------------------------------------
+def create_listing(target, source, env):
+    cmd = env['OBJDUMP'] + ' -dCS ' + str(target[0])
+    rcode, out, err = cexec(cmd)
+
+    if rcode:
+        print_error(out + err)
+        Exit(rcode)
+
+    lst_path = drop_suffix( str(target[0]).replace('/obj/', '/lst/') ) + '.lst'
+    with open(lst_path, 'wb') as lst:
+        lst.write(out.encode())
+
+create_lst = Action(create_listing, None)
+
+#---------------------------------------------------------------------
+def retreive_linker_script(name, env):
+
+    ld_scripts = read_sources('src_ld.yml')
+
+    src_script = None
+    for i in ld_scripts:
+        if name + '.ld.S' in i:
+            src_script = i
+            break
+
+    if not src_script:
+        print_error('E: linker script corresponding to target "{}" not specified in config file "src_ld.yml"'.format(name))
+        Exit(-1)
+
+    trg_script = str( Path(env['DIRS'].BUILD) / 'src' / (name + '.ld') )
+
+    env['SRC_LINKER_SCRIPT'] = src_script
+    env['TRG_LINKER_SCRIPT'] = trg_script
+
+#---------------------------------------------------------------------
+def preprocess_linker_script(target, source, env):
+
+    src_script = env['SRC_LINKER_SCRIPT']
+    trg_script = env['TRG_LINKER_SCRIPT']
+
+    cmd = '{} -P -udnef -I{} {} {}'.format(env['CPP'],  env['BUILD_SRC_PATH'], src_script, trg_script)
+
+    rcode, out, err = cexec(cmd)
+    out += err
+    if out: print( out.replace('`', '\'') )
+
+    if rcode != 0:
+        return rcode
+
+#---------------------------------------------------------------------
+def create_program_listing(target, source, env):
+    cmd = env['OBJDUMP'] + ' -dCS ' + str(target[0])
+    rcode, out, err = cexec(cmd)
+
+    if rcode:
+        print_error(out + err)
+        Exit(rcode)
+
+    lst_path = str(target[0]) + '.lst'
+    with open(lst_path, 'wb') as lst:
+        lst.write(out.encode())
+
+create_prg_lst = Action(create_program_listing, None)
+
+
+#-------------------------------------------------------------------------------
+#
+#    Main Build Stuff
+#
+Import(['envx', 'VivadoProject'])
+
+dirs = envx['DIRS']
+
+add_search_path( str( Path(dirs.COMMON) / 'sw' / 'apu' / 'env' ) )
+
+build_root = Path(dirs.BUILD)
+
+apu_params = read_config('apu_params.yml')
+fpu_enable = apu_params['FPU_ENABLE']
+
+#---------------------------------------------------------------------
+#
+#    Libraries
+#
+src_embio        = read_sources('src_embio.yml')
+src_xil          = read_sources('src_xil.yml')
+src_z7lib        = read_sources('src_z7lib.yml')
+
+lib_build_path   = build_root / 'sw' / 'apu' / 'lib'
+
+embio_obj_path   = lib_build_path / 'embio' / 'obj'
+xil_obj_path     = lib_build_path / 'xil'   / 'obj'
+z7lib_obj_path   = lib_build_path / 'z7lib' / 'obj'
+
+objdirs = [embio_obj_path, xil_obj_path, z7lib_obj_path]
+
+#---------------------------------------------------------------------
+#
+#    Bootloader Settings
+#
+src_bld          = read_sources('src_apu_bld.yml')
+src_gen          = [str(build_root / 'src' / 'ps7_init.c')]
+
+bld_build_path   = build_root / 'sw' / 'apu' / 'bld'
+bld_obj_path     = bld_build_path / 'obj'
+
+objdirs.append(bld_obj_path)
+
+Depends(src_bld, VivadoProject)
+Depends(src_gen, VivadoProject)
+
+#---------------------------------------------------------------------
+#
+#    Camera Program Settings
+#
+src_cam          = read_sources('src_apu_cam.yml')
+cam_build_path   = build_root / 'sw' / 'apu' / 'cam'
+cam_obj_path     = cam_build_path / 'obj'
+
+objdirs.append(cam_obj_path)
+
+Depends(src_cam,  VivadoProject)
+
+lstdirs = [i.parent / 'lst' for i in objdirs]
+
+create_dirs(lstdirs)
+
+#---------------------------------------------------------------------
+#
+#    Tool Options
+#
+CPU          = 'cortex-a9'
+
+Optimization ='-O2'
+DebugLevel   ='-g3'          # empty to disable debug info
+
+BUILD_DATE = datetime.now().strftime('%Y-%m-%d')
+BUILD_TIME = datetime.now().strftime('%H:%M:%S')
+
+setup_default_env(envx)
+
+FLAGS = []
+FLAGS.append('-mcpu=' + CPU)
+FLAGS.append('-mtune=cortex-a9')
+if fpu_enable:
+    FLAGS.append('-mfloat-abi=hard')
+    FLAGS.append('-mfpu=vfpv3')
+else:
+    FLAGS.append('-mfloat-abi=soft')
+
+
+FLAGS.append(Optimization)
+FLAGS.append(DebugLevel)
+
+envx.Prepend(ASFLAGS   = FLAGS)
+envx.Prepend(CFLAGS    = FLAGS)
+envx.Prepend(CXXFLAGS  = FLAGS)
+
+envx.Append(CPPPATH = ['#../lib/ps7mmr/const',
+                       '#../lib/z7lib',
+                       '#../lib/xil',
+                       #'#src/sw/include',
+                       '#../../../../scmRTOS/core',
+                       '#../../../../scmRTOS/port/zynq7k',
+                       '#src/sw/apu/cam',
+                       str(build_root / 'src')])
+
+envx.Append(LIBPATH = lib_build_path)
+envx.Append(LIBS = ['embio', 'xil', 'z7lib'])
+
+map_filename = '${TARGET.dir}' + os.sep + '${TARGET.name}.map'
+envx.Append(LINKFLAGS='-Wl,-Map={},--cref'.format(map_filename))
+
+#-----------------------------------------------------------
+#
+#    Add command-line macros
+#
+for p in apu_params:
+    envx.Append(CPPDEFINES = '{}={}'.format(p, apu_params[p]))
+    envx.Append(LINKFLAGS = '-Wl,"--defsym={}={}"'.format(p, apu_params[p]))
+
+#-----------------------------------------------------------
+#
+#    Bootloader-specific Construction Environment
+#
+envbld = envx.Clone()
+envbld.Append (LINKFLAGS = FLAGS.copy())
+retreive_linker_script('bld', envbld)
+envbld.Append(LINKFLAGS = '-T' + envbld['TRG_LINKER_SCRIPT'])
+
+#-----------------------------------------------------------
+#
+#    Camera Program Construction Environment
+#
+envx.Append (LINKFLAGS = FLAGS.copy())
+retreive_linker_script('cam', envx)
+envx.Append(LINKFLAGS = '-T' + envx['TRG_LINKER_SCRIPT'])
+
+#---------------------------------------------------------------------
+#
+#    Build Targets
+#
+
+#-----------------------------------------------------------
+#
+#    Libraries
+#
+obj_embio = make_objects(envx, src_embio, str(embio_obj_path))
+obj_xil   = make_objects(envx, src_xil,   str(xil_obj_path))
+obj_z7lib = make_objects(envx, src_z7lib, str(z7lib_obj_path))
+
+libembio  = envx.StaticLibrary(str(lib_build_path / 'embio'), obj_embio)
+libxil    = envx.StaticLibrary(str(lib_build_path / 'xil'),   obj_xil)
+libz7lib  = envx.StaticLibrary(str(lib_build_path / 'z7lib'), obj_z7lib)
+
+#-----------------------------------------------------------
+#
+#    Bootloader
+#
+bld_obj  = make_objects(envx, src_bld,  str(bld_obj_path))
+bld_obj += make_objects(envx, src_gen,  str(bld_obj_path))
+
+bld = envbld.Program(str(bld_build_path / 'bld.elf'), bld_obj)
+bld_cpp_ld = Action(preprocess_linker_script, None)
+envbld.AddPreAction(bld, bld_cpp_ld)
+envbld.AddPostAction(bld, create_prg_lst)
+Depends(bld, envbld['SRC_LINKER_SCRIPT'])
+
+#-----------------------------------------------------------
+#
+#    Camera Program
+#
+cam_obj  = make_objects(envx, src_cam,  str(cam_obj_path))
+
+cam = envx.Program(str(cam_build_path / 'cam.elf'), cam_obj)
+cam_cpp_ld = Action(preprocess_linker_script, None)
+envx.AddPreAction(cam, cam_cpp_ld)
+envbld.AddPostAction(cam, create_prg_lst)
+Depends(cam, envx['SRC_LINKER_SCRIPT'])
+
+Return('bld', 'cam')
+
+#-------------------------------------------------------------------------------
+

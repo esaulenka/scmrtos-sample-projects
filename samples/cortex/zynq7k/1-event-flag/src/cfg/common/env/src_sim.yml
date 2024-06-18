@@ -1,0 +1,7 @@
+
+
+usedin: sim
+
+sources:
+    - src/hw/sim/top_tb.sv
+

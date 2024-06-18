@@ -1,0 +1,9 @@
+
+
+sources:
+
+    - ../lib/embio/itoa.c
+    - ../lib/embio/utoa.c
+    - ../lib/embio/floatp10.cpp
+    - ../lib/embio/printfs.cpp
+

@@ -1,0 +1,17 @@
+
+parameters:
+    VARIANT_NAME        : = ARGUMENTS['bv']
+    PROJECT_NAME        : = VARIANT_NAME
+    TOP_NAME            : lwircam
+    TESTBENCH_NAME      : top_tb
+    DEVICE              : xc7z020iclg484-1l
+                        
+    DATA_WIDTH          : 4
+    CLK_OUT_PHASE_SHIFT : 220
+
+    DDR_ADDR_W          : 14
+    DDR_BA_W            : 3
+    DDR_DATA_W          : 32
+    DDR_LANE_COUNT      : 4
+    MIO_DATA_W          : 54
+
